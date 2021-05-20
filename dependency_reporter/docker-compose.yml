@@ -1,0 +1,24 @@
+version: "3.9"
+services:
+  app:
+    build:
+      context: .
+      args:
+        NEO4J_HOST: "${NEO4J_HOST}"
+        NEO4J_USER: "${NEO4J_USER}"
+        NEO4J_PASSWORD: "${NEO4J_PASSWORD}"
+        ENTERPRISE_URL: "${ENTERPRISE_URL}"
+        OPENSOURCE_REPO_LIST: "${OPENSOURCE_REPO_LIST}"
+        ENTERPRISE_REPO_LIST: "${ENTERPRISE_REPO_LIST}"
+    volumes:
+      - reports:/home/app/reports
+    links:
+      - graph_db
+  graph_db:
+    image: neo4j
+    volumes:
+      - reports:/var/lib/neo4j/import
+
+volumes:
+  reports:
+
