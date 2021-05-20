@@ -33,7 +33,11 @@ for elem in ${tf_dir[@]}; do
 		if [[ $? -eq 0 ]]; then
 			actual_dep=$(grep -A 11 "data \"terraform_remote_state\" \"$dep\"" "$tf_dir/terraform.tf$3" | grep " key " | tr '/' '\n' | tail -n 1 |  cut -f 1 -d '.')
 			actual_dependencies="$actual_dependencies$actual_dep:"
+		else
+		  echo "Cannot find usage of \"$dep\" in repo \"$repo_name\" - this can be removed from the repo."
+		  echo "$repo_name: $dep" >> unused_terraform_state_imports.txt
 		fi
+
 	done
 
 done
