@@ -16,6 +16,9 @@ services:
       - graph_db
   graph_db:
     image: neo4j
+    ports:
+      - 7474:7474
+      - 7687:7687
     volumes:
       - reports:/var/lib/neo4j/import
 
