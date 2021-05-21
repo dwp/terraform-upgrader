@@ -11,10 +11,13 @@ services:
         OPENSOURCE_ORG_NAME: "${OPENSOURCE_ORG_NAME}"
         OPENSOURCE_REPO_LIST: "${OPENSOURCE_REPO_LIST}"
         ENTERPRISE_REPO_LIST: "${ENTERPRISE_REPO_LIST}"
+    environment:
+      APP_PATH: "/home/app"
     volumes:
       - reports:/home/app/reports
     links:
       - graph_db
+
   graph_db:
     image: neo4j
     ports:

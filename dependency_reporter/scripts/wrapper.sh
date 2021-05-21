@@ -1,7 +1,28 @@
 #! /bin/bash
 
 # script requires one argument - the base URL of the enterprise github account
-source ./scripts/functions.sh
+function check_argument() {
+  argument="$1"
+  message="$2"
+  continue_on_fail="$3"
+
+  if [[ -z $argument ]]; then
+    echo $message
+    $continue_on_fail || exit 1
+  fi
+}
+
+function get_dependencies(){
+  github_url="$1"
+  id="$2"
+  tf_file_ext="$3"
+  config_file="$4"
+
+  for repo in $config_file; do
+    source ./scripts/get_dependencies.sh "$github_url/$repo.git" "$id" "$tf_file_ext"
+    id=$(( $id + 1 ))
+  done
+}
 
 check_argument $enterprise_url "Enterprise URL not provided... Exiting"
 
@@ -16,16 +37,4 @@ get_dependencies "https://www.github.com/dwp" $id ".tf.j2" "$opensource_repo_lis
 get_dependencies "$1" $id ".tf" "$enterprise_repo_list"
 
 # Call python script to pass csv & queries to Neo4J container
-
-#verify connection to Graph DB
-#while ! nc -z $NEO4J_HOST 7687; do
-#  sleep 0.1
-#done
-
-pipenv install
-
-pwd
-
-ls -la ./scripts
-
-pipenv run python ./scripts/graph.py
+python "${APP_HOME}/graph.py"

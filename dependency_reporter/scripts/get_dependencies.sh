@@ -50,4 +50,3 @@ cd ../../
 actual_dependencies=${actual_dependencies::-1}
 rm -rf current_repo
 echo "$2,$repo_name,$actual_dependencies" >> ./reports/deps.csv
-
