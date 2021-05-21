@@ -6,6 +6,7 @@ COPY . /home/app
 
 RUN apk update && apk add bash vim git
 RUN chmod +x ./scripts/*.sh && pip install pipenv
+RUN mkdir ./repos
 RUN mkdir ./reports
 RUN touch ./reports/unused_terraform_state_imports.txt
 

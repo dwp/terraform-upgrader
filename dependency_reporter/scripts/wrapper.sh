@@ -19,7 +19,7 @@ function get_dependencies(){
   config_file="$4"
 
   for repo in $config_file; do
-    source ./scripts/get_dependencies.sh "$github_url/$repo.git" "$id" "$tf_file_ext"
+    source ./scripts/get_dependencies.sh "$github_url/$repo.git" "$id" "$tf_file_ext" "$repo" "$APP_PATH"
     id=$(( $id + 1 ))
   done
 }
@@ -37,4 +37,4 @@ get_dependencies "https://www.github.com/dwp" $id ".tf.j2" "$opensource_repo_lis
 get_dependencies "$1" $id ".tf" "$enterprise_repo_list"
 
 # Call python script to pass csv & queries to Neo4J container
-python "${APP_HOME}/graph.py"
+python "${APP_PATH}/graph.py"

@@ -5,10 +5,13 @@ source ./scripts/functions.sh
 check_argument $1 "Repo URL not provided... Exiting"
 check_argument $2 "ID for CSV row not provided... Exiting"
 check_argument $3 "No file extension file, not using Jinja2 template." true
+check_argument $4 "No repo name. Repo URL $1" true
 
 REPO_LOCATION=$1
-mkdir ./current_repo
-cd ./current_repo
+APP_PATH=$5
+
+mkdir -p "${APP_PATH}/repos/$4"
+cd "repos/$4"
 
 {
 	git clone "$REPO_LOCATION"
@@ -17,8 +20,6 @@ cd ./current_repo
 	exit 1
 }
 
-repo_name=$(ls)
-cd $repo_name
 actual_dependencies=""
 # find all directories that have tf config files
 tf_dir=($(find . -type f -name "terraform$3" | xargs dirname))
@@ -38,7 +39,7 @@ for elem in ${tf_dir[@]}; do
 		else
 		  # add unused dependencies to list to be removed, mapped to repo they are in
 		  echo "Cannot find usage of \"$dep\" in repo \"$repo_name\" - this can be removed from the repo."
-		  echo "$repo_name: $dep" >> ./reports/unused_terraform_state_imports.txt
+		  echo "$repo_name: $dep" >> "${APP_PATH}/reports/unused_terraform_state_imports.txt"
 		fi
 
 	done
@@ -48,5 +49,4 @@ done
 cd ../../
 # remove trailing ':'
 actual_dependencies=${actual_dependencies::-1}
-rm -rf current_repo
-echo "$2,$repo_name,$actual_dependencies" >> ./reports/deps.csv
+echo "$2,$repo_name,$actual_dependencies" >> "${APP_PATH}/reports/deps.csv"
