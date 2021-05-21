@@ -18,3 +18,7 @@ You can also supply an enterprise github FQDN link as a secondary argument.
 The wrapper script will feed each repo supplied in the repos list to get_dependencies script. 
 Get_dependencies will search for the terraform.tf or tf.j2 file, finds all remote state imports, then searches the code base for uses of those imports. If found, marked as a dependency and is added to the deps.csv file.
 If they aren't used, they are added to the `unused_terraform_state_imports.txt` file for codebase cleanup.
+
+## Upgrading Terraform
+To upgrade repos programmatically, use `tf_upgrade.sh`.
+This script will use the terraform upgrade CLI option and also remove any outdated interpolation of values. Heredocs are unaffected.
