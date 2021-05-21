@@ -18,6 +18,8 @@ services:
     image: neo4j
     volumes:
       - reports:/var/lib/neo4j/import
+    ports:
+      - "7687"
 
 volumes:
   reports:
