@@ -16,4 +16,16 @@ get_dependencies "https://www.github.com/dwp" $id ".tf.j2" "$opensource_repo_lis
 get_dependencies "$1" $id ".tf" "$enterprise_repo_list"
 
 # Call python script to pass csv & queries to Neo4J container
-#python ./graph.py
+
+#verify connection to Graph DB
+#while ! nc -z $NEO4J_HOST 7687; do
+#  sleep 0.1
+#done
+
+pipenv install
+
+pwd
+
+ls -la ./scripts
+
+pipenv run python ./scripts/graph.py
