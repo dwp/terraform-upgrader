@@ -57,7 +57,7 @@ def main():
     graph = Graph(os.environ.get("NEO4J_HOST", "bolt://localhost:7687"),
                   os.environ.get("NEO4J_USER", "neo4j"),
                   os.environ.get("NEO4J_PASSWORD", "neo4j"))
-    # graph.load_repos_dependencies("deps.csv")
+    graph.load_repos_dependencies("deps.csv")
     graph.query_graph("circular_dependencies")
     graph.close()
 
