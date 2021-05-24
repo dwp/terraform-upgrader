@@ -10,6 +10,8 @@ services:
         ENTERPRISE_URL: "${ENTERPRISE_URL}"
         OPENSOURCE_REPO_LIST: "${OPENSOURCE_REPO_LIST}"
         ENTERPRISE_REPO_LIST: "${ENTERPRISE_REPO_LIST}"
+        GITHUB_ENTERPRISE_PAT: "${GITHUB_ENTERPRISE_PAT}"
+        USERNAME: "${USERNAME}"
     volumes:
       - reports:/home/app/reports
     links:
