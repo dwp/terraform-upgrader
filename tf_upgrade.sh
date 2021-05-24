@@ -1,6 +1,6 @@
 #! /bin/bash
 
-source ./scripts/functions.sh
+source ./dependency_reporter/scripts/functions.sh
 
 check_argument $1 "Repo URL not provided... Exiting"
 
