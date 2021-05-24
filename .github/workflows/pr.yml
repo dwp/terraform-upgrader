@@ -15,14 +15,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Build Docker image
-        run: docker build -t ${{ env.IMAGE_NAME }}:latest .
+        run: docker build -t ${{ env.IMAGE_NAME }}:latest ./dependency_reporter
       - name: Run Snyk to check image for high vulnerabilities
         uses: snyk/actions/docker@master
         env:
           SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
         with:
           image: ${{ env.IMAGE_NAME }}
-          args: --file=Dockerfile --policy-path=./.snyk --severity-threshold=high --exclude-base-image-vulns --org=dwp-dataworks
+          args: --file=./dependency_reporter/Dockerfile --policy-path=./.snyk --severity-threshold=high --exclude-base-image-vulns --org=dwp-dataworks
 
   test:
     runs-on: ubuntu-latest
@@ -37,7 +37,7 @@ jobs:
 
       - name: Run tests
         run: |
-          pip install -r requirements.txt
+          pip install -r ./dependency_reporter/requirements.txt
           # python -m pytest -v
   
 
