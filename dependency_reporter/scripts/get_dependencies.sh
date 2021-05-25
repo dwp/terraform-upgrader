@@ -21,7 +21,7 @@ repo_name=$(ls)
 cd $repo_name
 actual_dependencies=""
 # find all directories that have tf config files
-tf_dir=($(find . -type f -name "terraform$3" | xargs dirname))
+tf_dir=( $(for i in $(find . -type f -name "terraform${3}"); do echo $i | sed -e 's/terraform'${3}'//'; done) )
 
 # loop through tf config directories and search for remote states imported to identify cross repo dependencies
 for elem in ${tf_dir[@]}; do

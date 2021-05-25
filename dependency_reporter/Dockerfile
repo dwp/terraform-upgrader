@@ -2,7 +2,7 @@ FROM python:3.8-alpine
 
 RUN sed -i 's/https/http/g' /etc/apk/repositories
 
-RUN mkdir -p /home/app
+RUN mkdir -p /home/app/reports
 
 WORKDIR /home/app
 
