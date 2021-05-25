@@ -1,4 +1,6 @@
-FROM python:3.8.10-slim-buster
+FROM python:3.8-alpine
+
+RUN sed -i 's/https/http/g' /etc/apk/repositories
 
 RUN mkdir -p /home/app
 
@@ -6,7 +8,7 @@ WORKDIR /home/app
 
 COPY . /home/app
 
-RUN apt-get update && apt-get install vim git -y
+RUN apk add --update bash git
 
 RUN chmod +x ./scripts/*.sh && pip install --index-url=https://pypi.python.org/simple/ --trusted-host=pypi.python.org --trusted-host=files.pythonhosted.org --trusted-host pypi.org -r requirements.txt
 
