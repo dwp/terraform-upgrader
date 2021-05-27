@@ -51,7 +51,7 @@ def main():
         if node.edges:
             dep_resolve(node, resolve, seen)
         else:
-            print(f"{ANSIColors.SUCCESS}{node.name} is orphan.{ANSIColors.RESET}")
+            print(f"{ANSIColors.SUCCESS}{node.name} does not depend on other repos.{ANSIColors.RESET}")
         print("-----------------------------")
         print("\n")
 

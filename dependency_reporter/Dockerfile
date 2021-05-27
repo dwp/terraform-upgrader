@@ -8,18 +8,17 @@ WORKDIR /home/app
 
 COPY . /home/app
 
-RUN apk add --update bash git
+RUN apk add --update git
 
-RUN chmod +x ./scripts/*.sh && pip install --index-url=https://pypi.python.org/simple/ --trusted-host=pypi.python.org --trusted-host=files.pythonhosted.org --trusted-host pypi.org -r requirements.txt
+RUN pip install --index-url=https://pypi.python.org/simple/ --trusted-host=pypi.python.org --trusted-host=files.pythonhosted.org --trusted-host pypi.org -r requirements.txt
 
 ARG ENTERPRISE_URL
 ARG OPENSOURCE_REPO_LIST
 ARG ENTERPRISE_REPO_LIST
-ARG NEO4J_HOST
-ARG NEO4J_USER
-ARG NEO4J_PASSWORD
 ARG GITHUB_ENTERPRISE_PAT
 ARG USERNAME
-ENV ENTERPRISE_URL=$ENTERPRISE_URL OPENSOURCE_REPO_LIST=$OPENSOURCE_REPO_LIST ENTERPRISE_REPO_LIST=$ENTERPRISE_REPO_LIST NEO4J_HOST=$NEO4J_HOST NEO4J_USER=$NEO4J_USER NEO4J_PASSWORD=$NEO4J_PASSWORD GITHUB_ENTERPRISE_PAT=$GITHUB_ENTERPRISE_PAT USERNAME=$USERNAME
+ARG GITHUB_ORG
+ARG ENTERPRISE_ORG
+ENV ENTERPRISE_URL=$ENTERPRISE_URL OPENSOURCE_REPO_LIST=$OPENSOURCE_REPO_LIST ENTERPRISE_REPO_LIST=$ENTERPRISE_REPO_LIST GITHUB_ENTERPRISE_PAT=$GITHUB_ENTERPRISE_PAT USERNAME=$USERNAME GITHUB_ORG=$GITHUB_ORG ENTERPRISE_ORG=$ENTERPRISE_ORG
 
-CMD ["./scripts/wrapper.sh"]
+CMD ["python3", "./scripts/app.py"]

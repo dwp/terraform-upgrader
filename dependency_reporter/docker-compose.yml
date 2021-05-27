@@ -4,28 +4,10 @@ services:
     build:
       context: .
       args:
-        NEO4J_HOST: "${NEO4J_HOST}"
-        NEO4J_USER: "${NEO4J_USER}"
-        NEO4J_PASSWORD: "${NEO4J_PASSWORD}"
         ENTERPRISE_URL: "${ENTERPRISE_URL}"
         OPENSOURCE_REPO_LIST: "${OPENSOURCE_REPO_LIST}"
         ENTERPRISE_REPO_LIST: "${ENTERPRISE_REPO_LIST}"
         GITHUB_ENTERPRISE_PAT: "${GITHUB_ENTERPRISE_PAT}"
         USERNAME: "${USERNAME}"
-    volumes:
-      - reports:/home/app/reports
-    links:
-      - graph_db
-  graph_db:
-    image: neo4j
-    environment:
-      NEO4J_AUTH: "none"
-    ports:
-      - 7474:7474
-      - 7687:7687
-    volumes:
-      - reports:/var/lib/neo4j/import
-
-volumes:
-  reports:
-
+        GITHUB_ORG: "${GITHUB_ORG}"
+        ENTERPRISE_ORG: "${ENTERPRISE_ORG}"
