@@ -1,9 +1,8 @@
 #! /bin/bash
 
-if [[ -z $1 ]]; then
-	echo "Repo URL not provided... Exiting"
-	exit 1
-fi
+source ./dependency_reporter/scripts/functions.sh
+
+check_argument $1 "Repo URL not provided... Exiting"
 
 REPO_LOCATION=$1
 export REPO_LOCATION
