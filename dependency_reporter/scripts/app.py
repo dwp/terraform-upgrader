@@ -2,40 +2,40 @@ from get_dependencies import RepoDependencies
 from dep_resolve import Node, dep_resolve, ANSIColors
 import os
 
+
 def main():
-    enterprise_url = os.getenv('ENTERPRISE_URL')
-    os_repos = os.getenv('OPENSOURCE_REPO_LIST')
-    enterprise_repos = os.getenv('ENTERPRISE_REPO_LIST')
-    os_org = os.getenv('GITHUB_ORG')
-    enterprise_org = os.getenv('ENTERPRISE_ORG')
+    enterprise_url = os.getenv("ENTERPRISE_URL")
+    os_repos = os.getenv("OPENSOURCE_REPO_LIST")
+    enterprise_repos = os.getenv("ENTERPRISE_REPO_LIST")
+    os_org = os.getenv("GITHUB_ORG")
+    enterprise_org = os.getenv("ENTERPRISE_ORG")
 
     if os_repos:
         if not os_org:
-            raise EnvironmentError('No github.com org name provided')
-        os_repos_list = os_repos.split(' ')
+            raise EnvironmentError("No github.com org name provided")
+        os_repos_list = os_repos.split(" ")
     else:
-        print('No open source repos provided.')
+        print("No open source repos provided.")
         os_repos_list = []
 
     if enterprise_repos:
-        print(f'enterprise_repos: {enterprise_repos}')
+        print(f"enterprise_repos: {enterprise_repos}")
         if not enterprise_org:
-            raise EnvironmentError('No github enterprise org name provided')
+            raise EnvironmentError("No github enterprise org name provided")
         if not enterprise_url:
-            raise EnvironmentError('No enterprise URL provided')
-        enterprise_repos_list = enterprise_repos.split(' ')
+            raise EnvironmentError("No enterprise URL provided")
+        enterprise_repos_list = enterprise_repos.split(" ")
     else:
-        print('No enterprise source repos provided.')
+        print("No enterprise source repos provided.")
         enterprise_repos_list = []
 
     repo_deps = RepoDependencies()
 
     for repo in os_repos_list:
-        print(f'repo = {repo}')
-        repo_deps.add_repo(repo, 'www.github.com', os_org, '.tf.j2')
+        repo_deps.add_repo(repo, "www.github.com", os_org, ".tf.j2")
 
     for repo in enterprise_repos_list:
-        repo_deps.add_repo(repo, enterprise_url, enterprise_org, '.tf', True)
+        repo_deps.add_repo(repo, enterprise_url, enterprise_org, ".tf", True)
 
     dependency_dict = repo_deps.get_dependencies()
     nodes = {}
@@ -59,7 +59,9 @@ def main():
         if node.edges:
             dep_resolve(node, resolve, seen)
         else:
-            print(f"{ANSIColors.SUCCESS}{node.name} is orphan.{ANSIColors.RESET}")
+            print(
+                f"{ANSIColors.SUCCESS}{node.name} does not depend on any repos.{ANSIColors.RESET}"
+            )
         print("-----------------------------")
         print("\n")
 
