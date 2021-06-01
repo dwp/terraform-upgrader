@@ -1,6 +1,29 @@
 from get_dependencies import RepoDependencies
-from dep_resolve import Node, dep_resolve, ANSIColors
-import os
+import os, copy, json, itertools
+
+
+def recursive(dep_dict, tuple, seen=[]):
+    circles = []
+    if tuple[0] in seen:
+        circles.append(seen[seen.index(tuple[0]) :])
+        seen = []
+    else:
+        seen.append(tuple[0])
+        if tuple[1]:
+            for item in tuple[1]:
+                circles.extend(
+                    recursive(dep_dict, [item, dep_dict.get(item)], seen.copy())
+                )
+    return circles
+
+
+def do_logic(dep_dict):
+    circles = []
+    for key in dep_dict:
+        circles.extend(recursive(dep_dict, [key, dep_dict[key]], []))
+    circles.sort()
+    with open("reports/output.json", "w") as output:
+        json.dump(list(k for k, _ in itertools.groupby(circles)), output)
 
 
 def main():
@@ -37,33 +60,8 @@ def main():
     for repo in enterprise_repos_list:
         repo_deps.add_repo(repo, enterprise_url, enterprise_org, ".tf", True)
 
-    dependency_dict = repo_deps.get_dependencies()
-    nodes = {}
-    for repo in dependency_dict:
-        dependencies = dependency_dict[repo]
-        node = Node(repo)
-        node.raw_edges = dependencies
-        nodes[repo] = node
-
-    for k, v in nodes.items():
-        if len(v.raw_edges) != 0:
-            for e in v.raw_edges:
-                edge = nodes.get(e)
-                if edge:
-                    v.add_edge(edge)
-
-        resolve = []
-    for node in nodes.values():
-        seen = []
-        print("-----------------------------")
-        if node.edges:
-            dep_resolve(node, resolve, seen)
-        else:
-            print(
-                f"{ANSIColors.SUCCESS}{node.name} does not depend on any repos.{ANSIColors.RESET}"
-            )
-        print("-----------------------------")
-        print("\n")
+    dep_dict = repo_deps.get_dependencies()
+    do_logic(dep_dict)
 
 
 if __name__ == "__main__":

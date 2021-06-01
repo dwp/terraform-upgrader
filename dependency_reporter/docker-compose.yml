@@ -11,3 +11,5 @@ services:
         USERNAME: "${USERNAME}"
         GITHUB_ORG: "${GITHUB_ORG}"
         ENTERPRISE_ORG: "${ENTERPRISE_ORG}"
+    volumes:
+      - "./reports:/home/app/reports"
