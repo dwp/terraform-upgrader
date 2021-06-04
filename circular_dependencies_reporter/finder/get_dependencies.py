@@ -13,7 +13,9 @@ class RepoDependencies:
         remote_state_lookups = []
         for file_path in config_files:
             remote_state_lookups.extend(
-                self._get_remote_state_block(file_path, 'data "terraform_remote_state"', 10)
+                self._get_remote_state_block(
+                    file_path, 'data "terraform_remote_state"', 10
+                )
             )
 
         dependencies = []
@@ -24,7 +26,9 @@ class RepoDependencies:
             )
             if exit_code == 0:
                 dep_name = (
-                    [s for s in remote_state_lookup if ".tfstate" in s][0].split("/")[-1].split(".")[0]
+                    [s for s in remote_state_lookup if ".tfstate" in s][0]
+                    .split("/")[-1]
+                    .split(".")[0]
                 )
                 if dep_name not in dependencies:
                     dependencies.append(dep_name)
@@ -48,7 +52,9 @@ class RepoDependencies:
         if private:
             auth_str = f"{username}:{pat}@"
 
-        clone = RepoDependencies._create_clone_str(repo_name, repo_base_url, org, auth_str)
+        clone = RepoDependencies._create_clone_str(
+            repo_name, repo_base_url, org, auth_str
+        )
         os.system(clone)
 
     @staticmethod
@@ -72,4 +78,4 @@ class RepoDependencies:
             start_ind = [
                 number for number, line in enumerate(data_arr) if line_to_match in line
             ]
-            return [data_arr[index: index + number_of_lines] for index in start_ind]
+            return [data_arr[index : index + number_of_lines] for index in start_ind]

@@ -4,7 +4,7 @@ import itertools
 def recursive(dep_dict, tuple, seen=[]):
     circles = []
     if tuple[0] in seen:
-        circles.append(seen[seen.index(tuple[0]):])
+        circles.append(seen[seen.index(tuple[0]) :])
         seen = []
     else:
         seen.append(tuple[0])
