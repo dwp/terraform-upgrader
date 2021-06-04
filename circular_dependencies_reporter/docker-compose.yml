@@ -11,5 +11,6 @@ services:
         USERNAME: "${USERNAME}"
         GITHUB_ORG: "${GITHUB_ORG}"
         ENTERPRISE_ORG: "${ENTERPRISE_ORG}"
+        GIT_SSL_NO_VERIFY: "${GIT_SSL_NO_VERIFY}"
     volumes:
       - "./reports:/home/app/reports"

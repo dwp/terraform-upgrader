@@ -1,32 +1,13 @@
-from get_dependencies import RepoDependencies
-import os, copy, json, itertools
+import os
+import json
+import logging
 
-
-def recursive(dep_dict, tuple, seen=[]):
-    circles = []
-    if tuple[0] in seen:
-        circles.append(seen[seen.index(tuple[0]) :])
-        seen = []
-    else:
-        seen.append(tuple[0])
-        if tuple[1]:
-            for item in tuple[1]:
-                circles.extend(
-                    recursive(dep_dict, [item, dep_dict.get(item)], seen.copy())
-                )
-    return circles
-
-
-def do_logic(dep_dict):
-    circles = []
-    for key in dep_dict:
-        circles.extend(recursive(dep_dict, [key, dep_dict[key]], []))
-    circles.sort()
-    with open("reports/output.json", "w") as output:
-        json.dump(list(k for k, _ in itertools.groupby(circles)), output)
+from finder.get_dependencies import RepoDependencies
+from finder.find_circular_dependencies import *
 
 
 def main():
+    logging.debug("Terraform-upgrader starts")
     enterprise_url = os.getenv("ENTERPRISE_URL")
     os_repos = os.getenv("OPENSOURCE_REPO_LIST")
     enterprise_repos = os.getenv("ENTERPRISE_REPO_LIST")
@@ -38,18 +19,17 @@ def main():
             raise EnvironmentError("No github.com org name provided")
         os_repos_list = os_repos.split(" ")
     else:
-        print("No open source repos provided.")
+        logging.debug("No open source repos provided.")
         os_repos_list = []
 
     if enterprise_repos:
-        print(f"enterprise_repos: {enterprise_repos}")
         if not enterprise_org:
             raise EnvironmentError("No github enterprise org name provided")
         if not enterprise_url:
             raise EnvironmentError("No enterprise URL provided")
         enterprise_repos_list = enterprise_repos.split(" ")
     else:
-        print("No enterprise source repos provided.")
+        logging.debug("No enterprise source repos provided.")
         enterprise_repos_list = []
 
     repo_deps = RepoDependencies()
@@ -61,7 +41,10 @@ def main():
         repo_deps.add_repo(repo, enterprise_url, enterprise_org, ".tf", True)
 
     dep_dict = repo_deps.get_dependencies()
-    do_logic(dep_dict)
+    circles_without_duplicates = find_circular_dependencies(dep_dict)
+    with open("reports/circular_dependencies.json", "w") as output:
+        json.dump(circles_without_duplicates, output)
+    logging.debug("Terraform-upgrader has completed without errors")
 
 
 if __name__ == "__main__":
