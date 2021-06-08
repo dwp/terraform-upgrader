@@ -1,7 +1,5 @@
 #! /bin/bash
 
-#source ./dependency_reporter/scripts/functions.sh
-
 function clone() {
     {
         git clone "$REPO_LOCATION"
@@ -32,14 +30,16 @@ function upgrade(){
 
     # look in concourse dir for version and replace
     if [[ -d "./ci" ]]; then
-        grep -rl 'terraform_version' ./ci | xargs sed -i "s/terraform_version/terraform_${tf_version}_version/g"
-        grep -rl "0.${curr_tf_version}.[0-9]*" ./ci | grep "\.y[a]*ml" | xargs sed -i "s/0\.${curr_tf_version}\.[0-9]*/\(\(dataworks.terraform_${tf_version}_version\)\)/g"
+        grep -rl 'terraform_[0-9_]*version' ./ci | xargs sed -i "s/terraform_[0-9_]*version/terraform_${tf_version}_version/g"
+        grep -rl "0.${curr_tf_version}.[0-9]*" ./ci | grep "\.y[a]*ml" | xargs sed -i "s/0\.${curr_tf_version}\.[0-9]*/\(\( dataworks.terraform_${tf_version}_version \)\)/g"
         grep -rl "0.${curr_tf_version}.[0-9]*" ./ci | grep "\.tf" | xargs sed -i "s/0\.${curr_tf_version}\.[0-9]*/0.${tf_version}.${tf_patch}/g"
     fi
 
     # look in github actions dir for version and replace
     if [[ -d "./.github/workflows" ]]; then
-        grep -rl 'terraform' ./.github/workflows tee >(xargs sed -i "s/0\.${curr_tf_version}\.[0-9]*/\${{ secrets.TERRAFORM_${tf_version}_VERSION }}/g") >(xargs sed -i "s/secrets.TERRAFORM_VERSION/secrets.TERRAFORM_${tf_version}_VERSION/g")
+        github_actions_files=$(grep -rl 'terraform' ./.github/workflows)
+        echo "$github_actions_files" | xargs sed -i "s/0\.${curr_tf_version}\.[0-9]*/\${{ secrets.TERRAFORM_${tf_version}_VERSION }}/g"
+        echo "$github_actions_files" | xargs sed -i "s/secrets.TERRAFORM_[0-9_]*VERSION/secrets.TERRAFORM_${tf_version}_VERSION/g"
     fi
 
     # look in tf for mentions of versions, run tf update command and replace tf 11 syntax
@@ -49,9 +49,13 @@ function upgrade(){
         $upgrade_command $dir
         start_dir=$(pwd)
         cd $dir
-        grep -rl 'required_version' . | tee >(xargs sed -i "s/0\.${curr_tf_version}\.[0-9]*/0.${tf_version}.${tf_patch}/g") >(xargs sed -i  "s/terraform_${curr_tf_version}/terraform_${tf_version}_version/g")
+        req_ver=$(grep -rl 'required_version' .)
+        echo "$req_ver" | xargs perl -0777 -pi -e "s/(terraform[\s]*{[\s]*\n[\s]*required_version[\s]*=[\s]*)\"[0-9]*\.[0-9]*\.[0-9]*/\1\">= 0.${tf_version}.${tf_patch}\"/g"
+        echo "$req_ver" | xargs perl -0777 -pi -e "s/(terraform[\s]*{[\s]*\n[\s]*required_version[\s]*=[\s]*)\"([^\n]*)terraform_[0-9_]*version([^\n]*)/\1\"\2terraform_${tf_version}_version\3/g"
         grep -rl 'provider' . | xargs perl -0777 -pi -e "s/provider[\s]*\"aws\"[\s]*{[\s]*\n[\s]*version[\s]*=[\s]*\".*[0-9]*\.[0-9]*\.[0-9]*\"/provider \"aws\" {\nversion = \"~> 3.42.0\"/g"
         tf_files=$(find . -type f -name '*.tf')
+        jinja_tf_files=$(find . -type f -name '*.j2')
+        tf_files=$(echo "$tf_files $jinja_tf_files")
         for file in $tf_files; do
           # find all files with HereDocs being used to avoid invalid substitutions
             eof_locations=$(cat $file | grep '<<[A-Z]*')
@@ -114,7 +118,7 @@ if [[ $? -eq 0 ]]; then
     cd ../
 fi
 
-upgrade 12 31 13 7 $get_branch
+upgrade 12 31 13 4 $get_branch
 
 cd ../../
 rm -rf current_repo
