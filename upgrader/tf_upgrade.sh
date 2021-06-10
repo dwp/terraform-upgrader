@@ -50,9 +50,13 @@ function upgrade(){
         start_dir=$(pwd)
         cd $dir
         req_ver=$(grep -rl 'required_version' .)
-        echo "$req_ver" | xargs perl -0777 -pi -e "s/(terraform[\s]*{[\s]*\n[\s]*required_version[\s]*=[\s]*)\"[0-9]*\.[0-9]*\.[0-9]*/\1\">= 0.${tf_version}.${tf_patch}\"/g"
+        provider_block=$(grep -rl 'provider' .)
+        echo "$req_ver" | xargs perl -0777 -pi -e "s/(terraform[\s]*{[\s]*\n[\s]*required_version[\s]*=[\s]*\")[^\n]*[0-9]*\.[0-9]*\.[0-9]*/\1>= 0.${tf_version}.${tf_patch}/g"
         echo "$req_ver" | xargs perl -0777 -pi -e "s/(terraform[\s]*{[\s]*\n[\s]*required_version[\s]*=[\s]*)\"([^\n]*)terraform_[0-9_]*version([^\n]*)/\1\"\2terraform_${tf_version}_version\3/g"
-        grep -rl 'provider' . | xargs perl -0777 -pi -e "s/provider[\s]*\"aws\"[\s]*{[\s]*\n[\s]*version[\s]*=[\s]*\".*[0-9]*\.[0-9]*\.[0-9]*\"/provider \"aws\" {\nversion = \"~> 3.42.0\"/g"
+        echo "$provider_block" | xargs perl -0777 -pi -e "s/provider[\s]*\"aws\"[\s]*{[\s]*\n[\s]*version[\s]*=[\s]*\".*[0-9]*\.[0-9]*\.[0-9]*\"/provider \"aws\" {\nversion = \"~> 3.42.0\"/g"
+        echo "$provider_block" | xargs perl -0777 -pi -e "s/provider[\s]*\"aws\"[\s]*{[\s]*\n([\s]*alias[\s]*=[\s]*[^\n]*\n)[\s]*version[\s]*=[\s]*\".*[0-9]*\.[0-9]*\.[0-9]*\"/provider \"aws\" {\n\1version = \"~> 3.42.0\"/g"
+        echo "$provider_block" | xargs perl -0777 -pi -e "s/(provider[\s]*=[\s]*)\"([^\"])\"/\1\2/g"
+        grep -rl 'depends_on' . | xargs perl -0777 -pi -e "s/(depends_on[\s]*=[\s]*[)\"([^\"])\"(])/\1\2\3/g"
         tf_files=$(find . -type f -name '*.tf')
         jinja_tf_files=$(find . -type f -name '*.j2')
         tf_files=$(echo "$tf_files $jinja_tf_files")
