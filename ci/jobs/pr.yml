@@ -15,7 +15,7 @@ jobs:
         input_mapping:
           terraform-upgrader: terraform-upgrader-pr
         params:
-          TF_WORKSPACE: "management"
+          TF_WORKSPACE: "default"
           DETAILED_EXITCODE: ""
         on_failure:
           put: terraform-upgrader-pr
