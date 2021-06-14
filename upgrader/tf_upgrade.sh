@@ -115,14 +115,16 @@ cd ./current_repo
 
 clone
 
-grep -r "0.11.[0-9]*" .
+if [[ -n "$4" ]]; then
+    grep -r "0."$4".[0-9]*" .
 
-if [[ $? -eq 0 ]]; then
-    upgrade 11 0 12 31
-    cd ../
+    if [[ $? -eq 0 ]]; then
+        upgrade "$6" "$7" "$4" "$5"
+        cd ../
+    fi
 fi
 
-upgrade 12 31 13 4 $get_branch
+upgrade "$4" "$5" "$2" "$3" $get_branch
 
 cd ../../
 rm -rf current_repo
