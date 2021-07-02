@@ -1,0 +1,374 @@
+groups:
+- jobs:
+  - management-dev
+  - management
+  name: master
+- jobs:
+  - terraform-upgrader-pr
+  name: pull-request
+- jobs:
+  - mirror-dwpdigital-terraform-upgrader-dev
+  - mirror-dwpdigital-terraform-upgrader
+  name: mirror
+- jobs:
+  - update-pipeline
+  name: update-pipeline
+jobs:
+- max_in_flight: 1
+  name: management-dev
+  plan:
+  - get: terraform-upgrader
+    trigger: true
+  - config:
+      image_resource:
+        source:
+          repository: ((dataworks.docker_awscli_repository))
+          tag: ((dataworks.docker_awscli_version))
+          version: ((dataworks.docker_awscli_version))
+        type: docker-image
+      inputs:
+      - name: terraform-upgrader
+      outputs:
+      - name: terraform-bootstrap
+      params:
+        AWS_REGION: ((dataworks.aws_region))
+      platform: linux
+      run:
+        args:
+        - -exc
+        - |
+          python bootstrap_terraform.py
+          cp terraform.tf ../terraform-bootstrap
+        dir: terraform-upgrader
+        path: sh
+    task: terraform-bootstrap
+  - config:
+      image_resource:
+        source:
+          repository: ((dataworks.terraform_repository))
+          tag: ((dataworks.terraform_13_version))
+        type: docker-image
+      inputs:
+      - name: terraform-upgrader
+      - name: terraform-bootstrap
+      params:
+        TF_CLI_ARGS_apply: -lock-timeout=300s
+        TF_CLI_ARGS_plan: -lock-timeout=300s
+        TF_INPUT: false
+        TF_VAR_costcode: ((dataworks.costcode))
+      platform: linux
+      run:
+        args:
+        - -exc
+        - |
+          cp ../terraform-bootstrap/terraform.tf .
+          terraform workspace show
+          terraform init
+          terraform plan -out terraform.plan
+          terraform apply -auto-approve terraform.plan
+        dir: terraform-upgrader
+        path: sh
+    task: terraform-apply
+  - config:
+      image_resource:
+        source:
+          repository: ((dataworks.terraform_repository))
+          tag: ((dataworks.terraform_13_version))
+        type: docker-image
+      inputs:
+      - name: terraform-upgrader
+      - name: terraform-bootstrap
+      params:
+        TF_CLI_ARGS_apply: -lock-timeout=300s
+        TF_CLI_ARGS_plan: -lock-timeout=300s
+        TF_INPUT: false
+        TF_VAR_costcode: ((dataworks.costcode))
+      platform: linux
+      run:
+        args:
+        - -exc
+        - |
+          cp ../terraform-bootstrap/terraform.tf .
+          terraform workspace show
+          terraform init
+          terraform plan $DETAILED_EXITCODE
+        dir: terraform-upgrader
+        path: sh
+    params:
+      DETAILED_EXITCODE: -detailed-exitcode
+    task: terraform-plan
+- max_in_flight: 1
+  name: management
+  plan:
+  - get: terraform-upgrader
+    passed:
+    - management-dev
+    trigger: true
+  - config:
+      image_resource:
+        source:
+          repository: ((dataworks.docker_awscli_repository))
+          tag: ((dataworks.docker_awscli_version))
+          version: ((dataworks.docker_awscli_version))
+        type: docker-image
+      inputs:
+      - name: terraform-upgrader
+      outputs:
+      - name: terraform-bootstrap
+      params:
+        AWS_REGION: ((dataworks.aws_region))
+      platform: linux
+      run:
+        args:
+        - -exc
+        - |
+          python bootstrap_terraform.py
+          cp terraform.tf ../terraform-bootstrap
+        dir: terraform-upgrader
+        path: sh
+    task: terraform-bootstrap
+  - config:
+      image_resource:
+        source:
+          repository: ((dataworks.terraform_repository))
+          tag: ((dataworks.terraform_13_version))
+        type: docker-image
+      inputs:
+      - name: terraform-upgrader
+      - name: terraform-bootstrap
+      params:
+        TF_CLI_ARGS_apply: -lock-timeout=300s
+        TF_CLI_ARGS_plan: -lock-timeout=300s
+        TF_INPUT: false
+        TF_VAR_costcode: ((dataworks.costcode))
+      platform: linux
+      run:
+        args:
+        - -exc
+        - |
+          cp ../terraform-bootstrap/terraform.tf .
+          terraform workspace show
+          terraform init
+          terraform plan -out terraform.plan
+          terraform apply -auto-approve terraform.plan
+        dir: terraform-upgrader
+        path: sh
+    params:
+      TF_WORKSPACE: management
+    task: terraform-apply
+  - config:
+      image_resource:
+        source:
+          repository: ((dataworks.terraform_repository))
+          tag: ((dataworks.terraform_13_version))
+        type: docker-image
+      inputs:
+      - name: terraform-upgrader
+      - name: terraform-bootstrap
+      params:
+        TF_CLI_ARGS_apply: -lock-timeout=300s
+        TF_CLI_ARGS_plan: -lock-timeout=300s
+        TF_INPUT: false
+        TF_VAR_costcode: ((dataworks.costcode))
+      platform: linux
+      run:
+        args:
+        - -exc
+        - |
+          cp ../terraform-bootstrap/terraform.tf .
+          terraform workspace show
+          terraform init
+          terraform plan $DETAILED_EXITCODE
+        dir: terraform-upgrader
+        path: sh
+    params:
+      DETAILED_EXITCODE: -detailed-exitcode
+      TF_WORKSPACE: management
+    task: terraform-plan
+- name: mirror-dwpdigital-terraform-upgrader-dev
+  plan:
+  - attempts: 3
+    get: dwpdigital-terraform-upgrader
+    params:
+      format: oci
+    trigger: true
+  - attempts: 3
+    params:
+      image: dwpdigital-terraform-upgrader/image.tar
+    put: ecr-dwpdigital-terraform-upgrader-dev
+  serial_groups:
+  - terraform-upgrader
+- name: mirror-dwpdigital-terraform-upgrader
+  plan:
+  - attempts: 3
+    get: dwpdigital-terraform-upgrader
+    params:
+      format: oci
+    trigger: true
+  - attempts: 3
+    params:
+      image: dwpdigital-terraform-upgrader/image.tar
+    put: ecr-dwpdigital-terraform-upgrader
+  serial_groups:
+  - terraform-upgrader
+- name: terraform-upgrader-pr
+  plan:
+  - get: terraform-upgrader-pr
+    trigger: true
+    version: every
+  - params:
+      path: terraform-upgrader-pr
+      status: pending
+    put: terraform-upgrader-pr
+  - config:
+      image_resource:
+        source:
+          repository: ((dataworks.docker_awscli_repository))
+          tag: ((dataworks.docker_awscli_version))
+          version: ((dataworks.docker_awscli_version))
+        type: docker-image
+      inputs:
+      - name: terraform-upgrader
+      outputs:
+      - name: terraform-bootstrap
+      params:
+        AWS_REGION: ((dataworks.aws_region))
+      platform: linux
+      run:
+        args:
+        - -exc
+        - |
+          python bootstrap_terraform.py
+          cp terraform.tf ../terraform-bootstrap
+        dir: terraform-upgrader
+        path: sh
+    input_mapping:
+      terraform-upgrader: terraform-upgrader-pr
+    task: terraform-bootstrap
+  - config:
+      image_resource:
+        source:
+          repository: ((dataworks.terraform_repository))
+          tag: ((dataworks.terraform_13_version))
+        type: docker-image
+      inputs:
+      - name: terraform-upgrader
+      - name: terraform-bootstrap
+      params:
+        TF_CLI_ARGS_apply: -lock-timeout=300s
+        TF_CLI_ARGS_plan: -lock-timeout=300s
+        TF_INPUT: false
+        TF_VAR_costcode: ((dataworks.costcode))
+      platform: linux
+      run:
+        args:
+        - -exc
+        - |
+          cp ../terraform-bootstrap/terraform.tf .
+          terraform workspace show
+          terraform init
+          terraform plan $DETAILED_EXITCODE
+        dir: terraform-upgrader
+        path: sh
+    input_mapping:
+      terraform-upgrader: terraform-upgrader-pr
+    on_failure:
+      params:
+        path: terraform-upgrader-pr
+        status: failure
+      put: terraform-upgrader-pr
+    on_success:
+      params:
+        path: terraform-upgrader-pr
+        status: success
+      put: terraform-upgrader-pr
+    params:
+      DETAILED_EXITCODE: ""
+      TF_WORKSPACE: default
+    task: terraform-plan
+- name: update-pipeline
+  plan:
+  - get: terraform-upgrader
+    resource: terraform-upgrader-update-pipeline
+    trigger: true
+  - config:
+      image_resource:
+        source:
+          repository: ((dataworks.docker_aviator_repository))
+          version: ((dataworks.docker_aviator_version))
+        type: docker-image
+      inputs:
+      - name: terraform-upgrader
+      outputs:
+      - name: pipeline
+      platform: linux
+      run:
+        args:
+        - -exc
+        - |
+          sed -i 's/fly/nofly/' aviator.yml
+          /usr/bin/aviator -f aviator.yml
+          mv aviator_pipeline.yml ../pipeline
+        dir: terraform-upgrader
+        path: sh
+    task: aviator
+  - file: pipeline/aviator_pipeline.yml
+    set_pipeline: terraform-upgrader
+resource_types:
+- name: pull-request
+  source:
+    repository: teliaoss/github-pr-resource
+    tag: latest
+  type: docker-image
+- name: registry-image-resource
+  source:
+    repository: dwpdigital/registry-image-resource
+    tag: latest
+  type: docker-image
+resources:
+- check_every: 720h
+  name: terraform-upgrader-pr
+  source:
+    access_token: ((dataworks-secrets.concourse_github_pat))
+    repository: dwp/terraform-upgrader
+  type: pull-request
+  webhook_token: ((dataworks.concourse_github_webhook_token))
+- check_every: 720h
+  name: terraform-upgrader
+  source:
+    access_token: ((dataworks-secrets.concourse_github_pat))
+    branch: master
+    uri: https://github.com/dwp/terraform-upgrader.git
+  type: git
+  webhook_token: ((dataworks.concourse_github_webhook_token))
+- check_every: 720h
+  name: terraform-upgrader-update-pipeline
+  source:
+    branch: master
+    paths:
+    - ci/*
+    - aviator.yml
+    uri: https://github.com/dwp/terraform-upgrader.git
+  type: git
+  webhook_token: ((dataworks.concourse_github_webhook_token))
+- check_every: 5m
+  name: dwpdigital-terraform-upgrader
+  source:
+    repository: dwpdigital/terraform-upgrader
+  type: registry-image-resource
+- name: ecr-dwpdigital-terraform-upgrader-dev
+  source:
+    aws_access_key_id: ((dataworks-secrets.ci_aws_access_key_id))
+    aws_region: ((dataworks.aws_region))
+    aws_role_arn: arn:aws:iam::((dataworks.aws_management_dev_acc)):role/ci
+    aws_secret_access_key: ((dataworks-secrets.ci_aws_secret_access_key))
+    repository: terraform-upgrader
+  type: registry-image-resource
+- name: ecr-dwpdigital-terraform-upgrader
+  source:
+    aws_access_key_id: ((dataworks-secrets.ci_aws_access_key_id))
+    aws_region: ((dataworks.aws_region))
+    aws_role_arn: arn:aws:iam::((dataworks.aws_management_acc)):role/ci
+    aws_secret_access_key: ((dataworks-secrets.ci_aws_secret_access_key))
+    repository: terraform-upgrader
+  type: registry-image-resource
