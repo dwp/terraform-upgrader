@@ -10,3 +10,6 @@ groups:
     jobs:
       - mirror-dwpdigital-terraform-upgrader-dev
       - mirror-dwpdigital-terraform-upgrader
+  - name: update-pipeline
+    jobs:
+      - update-pipeline
