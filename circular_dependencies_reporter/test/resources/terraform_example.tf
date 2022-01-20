@@ -7,6 +7,12 @@ terraform {
     region  = "{{state_file_region}}"
     encrypt = true
   }
+
+  required_providers {
+    aws = {
+      version = "~> 2.66.0"
+    }
+  }
 }
 
 data "terraform_remote_state" "management" {
@@ -22,7 +28,6 @@ data "terraform_remote_state" "management" {
 }
 
 provider "aws" {
-  version = "~> 2.66.0"
   region  = "{{provider_region}}"
 
   assume_role {
