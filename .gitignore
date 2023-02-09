@@ -1,3 +1,9 @@
-.idea/
-.DS_STORE
+**/.idea/
+**/.terraform/
+
+**/*.tfvars
+**/*.tfstate
+**/*.tfstate*
+
+terraform.tf
 aviator_pipeline.yml
