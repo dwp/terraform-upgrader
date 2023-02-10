@@ -1,9 +1,6 @@
 resource "aws_ecr_repository" "terraform-upgrader" {
   name = "terraform-upgrader"
-  tags = merge(
-    local.common_tags,
-    { DockerHub : "dwpdigital/terraform-upgrader" }
-  )
+  tags = { DockerHub : "dwpdigital/terraform-upgrader" }
 }
 
 resource "aws_ecr_repository_policy" "terraform-upgrader" {
