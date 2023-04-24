@@ -1,24 +1,30 @@
-# terraform-upgrader
+# terraform-upgrader 
 
-## A suite of tools to facilitate the upgrading of terraform across many repos.
+terraform-upgrader is a tool to find terraform circular dependency paths across your Github repositories (public and private).
 
-This repo contains Makefile, and Dockerfile to fit the standard pattern.
-This repo is a base to create new Docker image repos, adding the githooks submodule, making the repo ready for use.
+## How to run the tool
+1. Fill out the blank `.env` file - the `<>_LIST` vars should be space separated lists
+ 
+    `<>` needs to be replaced by either `OPENSOURCE_REPO` or `ENTERPRISE_REPO`, i.e:
+    
+    ```
+    OPENSOURCE_REPO_LIST="repo_name_one repo_name_two repo_name_three"
+    ```
+    > N.B. GITHUB_ENTERPRISE_URL should not include `https://`
 
-After cloning this repo, please run:  
-`make bootstrap`
+2. `export` both github enterprise PAT* and username using:
 
-## Finding dependencies
-Create a `open_source_repos.txt` file with the repo names on Github that you'd like to be checked for dependencies.
-Create a `enterprise_repos.txt` file with the repo names on Enterprise Github that you'd like to be checked for dependencies.
+    ```
+    export GHE_PAT=<PAT_VALUE> GHE_USERNAME=<USERNAME_VALUE>
+    ```
+    *[Github PAT token setup](https://docs.github.com/en/github/authenticating-to-github/keeping-your-account-and-data-secure/creating-a-personal-access-token)
 
-Use the `wrapper.sh` script, supplying the Github shortname of your organisation. ie `github.com/ORGNAME`
-You can also supply an enterprise github FQDN link as a secondary argument.
+3. Run `docker-compose up`
 
-The wrapper script will feed each repo supplied in the repos list to get_dependencies script. 
-Get_dependencies will search for the terraform.tf or tf.j2 file, finds all remote state imports, then searches the code base for uses of those imports. If found, marked as a dependency and is added to the deps.csv file.
-If they aren't used, they are added to the `unused_terraform_state_imports.txt` file for codebase cleanup.
+    You should now see a csv file of dependencies appear in `./circular_dependencies_reporter/reports`
+    
+The result is a .json file containing a list of lists of circular dependency paths for the repositories specified in the configuration file.
+Output looks like:
 
-## Upgrading Terraform
-To upgrade repos programmatically, use `tf_upgrade.sh`.
-This script will use the terraform upgrade CLI option and also remove any outdated interpolation of values. Heredocs are unaffected.
+`[[a, b, c], [d]]` where `d` is a self referencing repo and `a` references `b`, `b` references `c`, and `c` references `a` (hence the circular dependency).
+
